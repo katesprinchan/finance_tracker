@@ -34,6 +34,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "Check your internet connection"),
         "aboutApplication":
             MessageLookupByLibrary.simpleMessage("About the application"),
+        "add": MessageLookupByLibrary.simpleMessage("Add"),
+        "addCategory": MessageLookupByLibrary.simpleMessage("Add category"),
         "addCity": MessageLookupByLibrary.simpleMessage("Add city"),
         "addComment": MessageLookupByLibrary.simpleMessage("Add a comment"),
         "addFavorites":
@@ -52,6 +54,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "card": MessageLookupByLibrary.simpleMessage("Card"),
         "cash": MessageLookupByLibrary.simpleMessage("Cash"),
         "categories": MessageLookupByLibrary.simpleMessage("Categories"),
+        "categoryDeleted":
+            MessageLookupByLibrary.simpleMessage("Категория удалена"),
+        "categoryName": MessageLookupByLibrary.simpleMessage("Category"),
+        "categoryUpdated": MessageLookupByLibrary.simpleMessage(
+            "The category has been updated"),
         "chooseDay": MessageLookupByLibrary.simpleMessage("Choose day"),
         "city": MessageLookupByLibrary.simpleMessage("City"),
         "close": MessageLookupByLibrary.simpleMessage("Close"),
@@ -60,6 +67,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "confirmEmail": MessageLookupByLibrary.simpleMessage("Confirm Email"),
         "darkTheme": MessageLookupByLibrary.simpleMessage("Dark theme"),
         "date": MessageLookupByLibrary.simpleMessage("Date"),
+        "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+        "deleteCategory":
+            MessageLookupByLibrary.simpleMessage("Delete a category?"),
         "description": MessageLookupByLibrary.simpleMessage("Description"),
         "dnestrovsk": MessageLookupByLibrary.simpleMessage("Dnestrovsk"),
         "done": MessageLookupByLibrary.simpleMessage("Done"),
@@ -184,7 +194,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "signIn": MessageLookupByLibrary.simpleMessage("Sign In"),
         "signUp": MessageLookupByLibrary.simpleMessage("Sign Up"),
         "slobodzeya": MessageLookupByLibrary.simpleMessage("Slobodzeya"),
+        "sureDeleteCategory": MessageLookupByLibrary.simpleMessage(
+            "Are you sure want to delete this category?"),
         "tiraspol": MessageLookupByLibrary.simpleMessage("Tiraspol"),
+        "title": MessageLookupByLibrary.simpleMessage("Title"),
         "today": m1,
         "travelAgencies":
             MessageLookupByLibrary.simpleMessage("Travel Agencies"),

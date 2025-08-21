@@ -122,10 +122,19 @@
     "addOperation": "Добавление операции",
     "date": "Дата операции",
     "amount": "Сумма операции",
-    "paymenthMethod": "Способ оплаты",
+    "paymentMethod": "Способ оплаты",
     "cash": "Наличные",
     "card": "Карта",
     "cancel": "Зыкрыть",
     "save": "Сохранить",
-    "enterValidAmount": "Введи сумму"
+    "enterValidAmount": "Введи сумму",
+    "addCategory": "Добавление категории",
+    "categoryName": "Хобби",
+    "add": "Добавить",
+    "title": "Название",
+    "categoryUpdated": "Категория обновлена",
+    "deleteCategory": "Удалить категорию?",
+    "sureDeleteCategory": "Вы уверены, что хотите удалить эту категорию?",
+    "delete": "Удалить",
+    "categoryDeleted": "Категория удалена"
 }

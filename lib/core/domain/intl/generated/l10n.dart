@@ -1319,6 +1319,96 @@ class S {
       args: [],
     );
   }
+
+  /// `Add category`
+  String get addCategory {
+    return Intl.message(
+      'Add category',
+      name: 'addCategory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Category`
+  String get categoryName {
+    return Intl.message(
+      'Category',
+      name: 'categoryName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add`
+  String get add {
+    return Intl.message(
+      'Add',
+      name: 'add',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Title`
+  String get title {
+    return Intl.message(
+      'Title',
+      name: 'title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The category has been updated`
+  String get categoryUpdated {
+    return Intl.message(
+      'The category has been updated',
+      name: 'categoryUpdated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete a category?`
+  String get deleteCategory {
+    return Intl.message(
+      'Delete a category?',
+      name: 'deleteCategory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure want to delete this category?`
+  String get sureDeleteCategory {
+    return Intl.message(
+      'Are you sure want to delete this category?',
+      name: 'sureDeleteCategory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete`
+  String get delete {
+    return Intl.message(
+      'Delete',
+      name: 'delete',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Категория удалена`
+  String get categoryDeleted {
+    return Intl.message(
+      'Категория удалена',
+      name: 'categoryDeleted',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

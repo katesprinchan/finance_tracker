@@ -6,6 +6,8 @@ import 'package:finance_tracker/features/auth/presentation/auth_vm.dart';
 import 'package:finance_tracker/features/auth/presentation/email_address_verification.dart';
 import 'package:finance_tracker/features/categories/presentation/page/categorie_page.dart';
 import 'package:finance_tracker/features/categories/presentation/page/categorie_vm.dart';
+import 'package:finance_tracker/features/categories/presentation/page/categoriesEditPageDetail.dart';
+import 'package:finance_tracker/features/categories/presentation/page/editing_categorie_page.dart';
 /*import 'package:finance_tracker/features/cities/presentation/add_comment_page.dart';
 import 'package:finance_tracker/features/cities/presentation/add_comment_vm.dart';
 import 'package:finance_tracker/features/cities/presentation/cities_detail_pade.dart';
@@ -52,6 +54,12 @@ abstract class AppRouteList {
 
   static const operationListPage = '/operationListPage';
   static const categoriePage = '/categoriePage';
+  static const _editingCategoriePagePath = '/editingCategoriePage';
+  static const editingCategoriePage = _editingCategoriePagePath;
+
+  static const _categoriesDetailPagePath = 'editingCategoriDetailePage';
+  static const categoriesDetailPage =
+      '$_editingCategoriePagePath/$_categoriesDetailPagePath';
   static const analyticPage = '/analyticPage';
 
   static const profilePage = '/profilePage';
@@ -136,9 +144,10 @@ abstract class AppRouterConfig {
                   return ChangeNotifierProvider<CategoryViewModel>.value(
                     value: vm,
                     child: CategoriePage(
-                        vm: vm,
-                        settingsService:
-                            AppContainer().serviceScope.settingsService),
+                      vm: vm,
+                      settingsService:
+                          AppContainer().serviceScope.settingsService,
+                    ),
                   );
                 },
               ),
@@ -148,17 +157,15 @@ abstract class AppRouterConfig {
             initialLocation: AppRouteList.operationListPage,
             routes: [
               GoRoute(
-                path: AppRouteList.operationListPage,
-                builder: (context, state) => OperationsPage(
-                  vm: CategorieViewModel(
-                    settingService: AppContainer().serviceScope.settingsService,
-                  ),
-                ),
-                /*routes: [
-                  GoRoute(
-                    path: AppRouteList._noConnectionPagePath,
-                    builder: (context, state) => const NoConnectionPage(),
-                  ),
+                  path: AppRouteList.operationListPage,
+                  builder: (context, state) => OperationsPage(
+                        vm: CategorieViewModel(
+                          settingService:
+                              AppContainer().serviceScope.settingsService,
+                        ),
+                      ),
+                  routes: const []
+                  /*
                   GoRoute(
                     path: AppRouteList._aboutApplicationPath,
                     builder: (context, state) => const AboutApplicationPage(),
@@ -221,7 +228,7 @@ abstract class AppRouterConfig {
                             ]),
                       ]),
                 ],*/
-              ),
+                  ),
             ],
           ),
           StatefulShellBranch(
@@ -279,6 +286,34 @@ abstract class AppRouterConfig {
                 ],
               ),
             ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRouteList._editingCategoriePagePath,
+        builder: (context, state) {
+          final vm = CategoryViewModel(
+            settingService: AppContainer().serviceScope.settingsService,
+          );
+          return ChangeNotifierProvider.value(
+            value: vm,
+            child: CategoriesEditPage(
+              vm: vm,
+              settingsService: AppContainer().serviceScope.settingsService,
+            ),
+          );
+        },
+        routes: [
+          GoRoute(
+            path: AppRouteList._categoriesDetailPagePath,
+            builder: (context, state) {
+              return CategoriesEditPageDetail(
+                vm: CategoryViewModel(
+                  settingService: AppContainer().serviceScope.settingsService,
+                ),
+                settingsService: AppContainer().serviceScope.settingsService,
+              );
+            },
           ),
         ],
       ),

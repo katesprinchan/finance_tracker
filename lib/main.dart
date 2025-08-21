@@ -22,7 +22,7 @@ Future<User> signInAnonymouslyIfNeeded() async {
   return user!;
 }
 
-Future<void> createUserRecordIfNeeded(User user) async {
+/*Future<void> createUserRecordIfNeeded(User user) async {
   final usersRef = FirebaseFirestore.instance.collection('Users');
   final doc = await usersRef.doc(user.uid).get();
 
@@ -32,7 +32,7 @@ Future<void> createUserRecordIfNeeded(User user) async {
       'isAnonymous': user.isAnonymous,
     });
   }
-}
+}*/
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,8 +44,8 @@ void main() async {
   );
 
   // Анонимный вход и создание записи в users
-  final user = await signInAnonymouslyIfNeeded();
-  await createUserRecordIfNeeded(user);
+  /*final user = await signInAnonymouslyIfNeeded();
+  await createUserRecordIfNeeded(user);*/
 
   runApp(MyApp(
     appContainer: AppContainer(),

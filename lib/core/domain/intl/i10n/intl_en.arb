@@ -125,5 +125,14 @@
     "card": "Card",
     "cancel": "Close",
     "save": "Save",
-    "enterValidAmount": "Please enter a valid amount"
+    "enterValidAmount": "Please enter a valid amount",
+    "addCategory": "Add category",
+    "categoryName": "Category",
+    "add": "Add",
+    "title": "Title",
+    "categoryUpdated": "The category has been updated",
+    "deleteCategory": "Delete a category?",
+    "sureDeleteCategory": "Are you sure want to delete this category?",
+    "delete": "Delete",
+    "categoryDeleted": "Категория удалена"
 }

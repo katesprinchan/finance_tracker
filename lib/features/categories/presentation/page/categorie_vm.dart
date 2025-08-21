@@ -51,6 +51,38 @@ class CategoryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  DateTimeRange? getCurrentDateRange() {
+    switch (_periodType) {
+      case PeriodType.allTime:
+        return null; // без ограничений
+      case PeriodType.day:
+      case PeriodType.chooseDay:
+        final start = DateTime(
+            _selectedDate.year, _selectedDate.month, _selectedDate.day);
+        final end = start
+            .add(const Duration(days: 1))
+            .subtract(const Duration(milliseconds: 1));
+        return DateTimeRange(start: start, end: end);
+      case PeriodType.week:
+        final startOfWeek =
+            _selectedDate.subtract(Duration(days: _selectedDate.weekday - 1));
+        final endOfWeek = startOfWeek
+            .add(const Duration(days: 7))
+            .subtract(const Duration(milliseconds: 1));
+        return DateTimeRange(start: startOfWeek, end: endOfWeek);
+      case PeriodType.month:
+        final start = DateTime(_selectedDate.year, _selectedDate.month, 1);
+        final end = DateTime(_selectedDate.year, _selectedDate.month + 1, 1)
+            .subtract(const Duration(milliseconds: 1));
+        return DateTimeRange(start: start, end: end);
+      case PeriodType.year:
+        final start = DateTime(_selectedDate.year, 1, 1);
+        final end = DateTime(_selectedDate.year + 1, 1, 1)
+            .subtract(const Duration(milliseconds: 1));
+        return DateTimeRange(start: start, end: end);
+    }
+  }
+
   void previousPeriod() {
     switch (_periodType) {
       case PeriodType.chooseDay:
@@ -124,6 +156,8 @@ class CategoryViewModel extends ChangeNotifier {
     String? userId,
   }) async {
     Query query = FirebaseFirestore.instance
+        .collection('Users')
+        .doc(userId)
         .collection('operations')
         .where('categoryId', isEqualTo: categoryId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))

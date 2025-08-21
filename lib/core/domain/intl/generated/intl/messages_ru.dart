@@ -34,6 +34,9 @@ class MessageLookup extends MessageLookupByLibrary {
             "Ошибка загрузки, попробуйте снова позднее"),
         "aboutApplication":
             MessageLookupByLibrary.simpleMessage("О приложении"),
+        "add": MessageLookupByLibrary.simpleMessage("Добавить"),
+        "addCategory":
+            MessageLookupByLibrary.simpleMessage("Добавление категории"),
         "addCity": MessageLookupByLibrary.simpleMessage("Добавить город"),
         "addComment":
             MessageLookupByLibrary.simpleMessage("Добавить комментарий"),
@@ -55,6 +58,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "card": MessageLookupByLibrary.simpleMessage("Карта"),
         "cash": MessageLookupByLibrary.simpleMessage("Наличные"),
         "categories": MessageLookupByLibrary.simpleMessage("Категории"),
+        "categoryDeleted":
+            MessageLookupByLibrary.simpleMessage("Категория удалена"),
+        "categoryName": MessageLookupByLibrary.simpleMessage("Хобби"),
+        "categoryUpdated":
+            MessageLookupByLibrary.simpleMessage("Категория обновлена"),
         "chooseDay": MessageLookupByLibrary.simpleMessage("Выбрать день"),
         "city": MessageLookupByLibrary.simpleMessage("Город"),
         "close": MessageLookupByLibrary.simpleMessage("Закрыть"),
@@ -64,6 +72,9 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Подтвердите почту"),
         "darkTheme": MessageLookupByLibrary.simpleMessage("Темная тема"),
         "date": MessageLookupByLibrary.simpleMessage("Дата операции"),
+        "delete": MessageLookupByLibrary.simpleMessage("Удалить"),
+        "deleteCategory":
+            MessageLookupByLibrary.simpleMessage("Удалить категорию?"),
         "description": MessageLookupByLibrary.simpleMessage("Описание"),
         "dnestrovsk": MessageLookupByLibrary.simpleMessage("Днестровск"),
         "done": MessageLookupByLibrary.simpleMessage("Готово"),
@@ -149,6 +160,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "Письмо для сбрасывания пароля \n было отправлено на Вашу электронную почту"),
         "passwordsNotMatching":
             MessageLookupByLibrary.simpleMessage("Пароли не совпадают"),
+        "paymentMethod": MessageLookupByLibrary.simpleMessage("Способ оплаты"),
         "period": MessageLookupByLibrary.simpleMessage("Выбери период"),
         "phone": MessageLookupByLibrary.simpleMessage("Телефон"),
         "profile": MessageLookupByLibrary.simpleMessage("Профиль"),
@@ -190,7 +202,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "signIn": MessageLookupByLibrary.simpleMessage("Войти"),
         "signUp": MessageLookupByLibrary.simpleMessage("Зарегистрироваться"),
         "slobodzeya": MessageLookupByLibrary.simpleMessage("Слободзея"),
+        "sureDeleteCategory": MessageLookupByLibrary.simpleMessage(
+            "Вы уверены, что хотите удалить эту категорию?"),
         "tiraspol": MessageLookupByLibrary.simpleMessage("Тирасполь"),
+        "title": MessageLookupByLibrary.simpleMessage("Название"),
         "today": m1,
         "travelAgencies":
             MessageLookupByLibrary.simpleMessage("Туристические агенства"),

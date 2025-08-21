@@ -4,10 +4,13 @@ import 'package:finance_tracker/core/presentation/button/custom_chip.dart';
 import 'package:finance_tracker/features/categories/presentation/category_button.dart';
 import 'package:finance_tracker/features/categories/presentation/page/categorie_vm.dart';
 import 'package:finance_tracker/features/settings/domain/service/settings_service.dart';
+import 'package:finance_tracker/routing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:rxdart/rxdart.dart';
 
 class CategoriePage extends StatefulWidget {
   final SettingsService settingsService;
@@ -76,6 +79,12 @@ class _CategoriePageState extends State<CategoriePage> {
                 )
               else
                 const SizedBox(width: 48),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  context.go(AppRouteList.editingCategoriePage);
+                },
+              )
             ],
           ),
           _incomeExpense(context),
@@ -88,360 +97,300 @@ class _CategoriePageState extends State<CategoriePage> {
 
   Widget _categoryRow(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final uid = user?.uid;
+    if (uid == null) return const SizedBox(); // вообще не должно случаться
+
     final settingsService = context.read<SettingsService>();
     final selectedLanguage = settingsService.currentLocale.languageCode;
 
-    void showAddOperationDialog(
-        BuildContext context, String categoryName, String categoryId) {
-      final TextEditingController amountController = TextEditingController();
-      DateTime selectedDate = DateTime.now();
-      String paymentMethod = 'cash'; // 'cash' или 'card'
+    void showAddCategoryDialog() {
+      final controller = TextEditingController();
 
       showDialog(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('${S.of(context).addOperation} - $categoryName'),
-            content: StatefulBuilder(
-              builder: (context, setState) {
-                return SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Дата операции
-                      Row(
-                        children: [
-                          Text('${S.of(context).date}: '),
-                          TextButton(
-                            child: Text(
-                              "${selectedDate.toLocal()}".split(' ')[0],
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            onPressed: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                initialDate: selectedDate,
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-                              if (picked != null && picked != selectedDate) {
-                                setState(() {
-                                  selectedDate = picked;
-                                });
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-
-                      // Сумма операции
-                      TextField(
-                        controller: amountController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        decoration: InputDecoration(
-                          labelText: S.of(context).amount,
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // Способ оплаты
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(S.of(context).paymentMethod),
-                          RadioListTile<String>(
-                            title: Text(S.of(context).cash),
-                            value: 'cash',
-                            groupValue: paymentMethod,
-                            onChanged: (value) {
-                              setState(() {
-                                paymentMethod = value!;
-                              });
-                            },
-                          ),
-                          RadioListTile<String>(
-                            title: Text(S.of(context).card),
-                            value: 'card',
-                            groupValue: paymentMethod,
-                            onChanged: (value) {
-                              setState(() {
-                                paymentMethod = value!;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
+        builder: (dialogContext) => AlertDialog(
+          title: Text(S.of(dialogContext).addCategory),
+          content: TextField(
+            controller: controller,
+            decoration:
+                InputDecoration(labelText: S.of(dialogContext).categoryName),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                controller.dispose();
               },
+              child: Text(S.of(dialogContext).cancel),
             ),
-            actions: [
-              TextButton(
-                child: Text(S.of(context).cancel),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              ElevatedButton(
-                child: Text(S.of(context).save),
-                onPressed: () async {
-                  final amountText = amountController.text.trim();
-                  if (amountText.isEmpty ||
-                      double.tryParse(amountText) == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(S.of(context).enterValidAmount)),
-                    );
-                    return;
-                  }
-                  final amount = double.parse(amountText);
+            TextButton(
+              onPressed: () async {
+                final name = controller.text.trim();
+                if (name.isEmpty) return;
 
-                  // Сохраняем операцию в Firestore
-                  final currentUser = FirebaseAuth.instance.currentUser;
-                  if (currentUser == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(S.of(context).logIn)),
-                    );
-                    return;
-                  }
+                final categoryData = {
+                  'name': name,
+                  'name_en': name,
+                  'type': _selectedType,
+                  'icon': 'category',
+                  'userId': uid,
+                  'createdAt': Timestamp.now(), // можно и serverTimestamp()
+                };
 
-                  final operationData = {
-                    'categoryId': categoryId,
-                    'type': _selectedType,
-                    'categoryName': categoryName,
-                    'date': Timestamp.fromDate(selectedDate),
-                    'amount': amount,
-                    'paymentMethod': paymentMethod,
-                    'userId': currentUser.uid,
-                    'createdAt': Timestamp.now(),
-                  };
-
+                try {
                   await FirebaseFirestore.instance
-                      .collection('Users')
-                      .doc(currentUser.uid)
-                      .collection('operations')
-                      .add(operationData);
+                      .collection('CategoriesUser')
+                      .add(categoryData);
 
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
+                  if (!dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop(); // закрываем диалог
+                } finally {
+                  controller.dispose();
+                }
+              },
+              child: Text(S.of(dialogContext).add),
+            ),
+          ],
+        ),
       );
     }
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('Categories')
-          .where('type', isEqualTo: _selectedType)
-          .snapshots(),
-      builder: (context, defaultSnapshot) {
-        if (!defaultSnapshot.hasData) return const SizedBox();
+    final defaultCats = FirebaseFirestore.instance
+        .collection('Categories')
+        .where('type', isEqualTo: _selectedType)
+        .snapshots();
 
-        if (user == null) {
-          // Только дефолтные категории без возможности добавлять операции
-          final defaultCategories = defaultSnapshot.data!.docs;
+    final userCats = FirebaseFirestore.instance
+        .collection('CategoriesUser')
+        .where('userId', isEqualTo: uid)
+        .where('type', isEqualTo: _selectedType)
+        .snapshots();
 
-          List<Widget> allCategories = defaultCategories.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final name = selectedLanguage == 'en'
-                ? data['name_en'] ?? ''
-                : data['name'] ?? '';
-            final iconName = data['icon'] ?? 'category';
-            return CategoryButton(
-              icon: _getIconData(iconName),
-              label: name,
-              backgroundColor: Colors.blue.shade100,
-              iconColor: Colors.white,
-              amount: '0',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(S.of(context).logIn)),
-                );
-              },
-            );
-          }).toList();
+    return StreamBuilder<List<QueryDocumentSnapshot>>(
+      stream: Rx.combineLatest2<QuerySnapshot, QuerySnapshot,
+          List<QueryDocumentSnapshot>>(defaultCats, userCats, (def, usr) {
+        final userDocs = usr.docs;
+        final overridden = userDocs
+            .map((d) => (d.data() as Map)['originalCategoryId'] as String?)
+            .whereType<String>()
+            .toSet();
 
-          // Кнопка добавления категорий (можно убрать или запретить для неавторизованных)
-          allCategories.add(CategoryButton(
-            icon: Icons.add,
-            label: '',
-            backgroundColor: Colors.grey.shade300,
-            iconColor: Colors.black,
-            amount: '',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(S.of(context).logIn)),
-              );
-            },
-          ));
-
-          return Wrap(
-            spacing: 20,
-            runSpacing: 20,
-            direction: Axis.horizontal,
-            children: allCategories,
-          );
-        }
+        return [
+          ...def.docs.where((d) => !overridden.contains(d.id)),
+          ...userDocs
+        ];
+      }),
+      builder: (context, catSnap) {
+        if (!catSnap.hasData) return const SizedBox();
+        final categories = catSnap.data!;
 
         return StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
-              .collection('Users')
-              .doc(user.uid)
-              .collection('categories')
+              .collection('Operations')
+              .where('userId', isEqualTo: uid)
               .where('type', isEqualTo: _selectedType)
               .snapshots(),
-          builder: (context, userSnapshot) {
-            if (!userSnapshot.hasData) return const SizedBox();
+          builder: (context, opSnap) {
+            if (!opSnap.hasData) return const SizedBox();
+            final ops = opSnap.data!.docs;
+            final categoryVM = context.watch<CategoryViewModel>();
+            final range = categoryVM.getCurrentDateRange();
+            // Суммы по категориям
+            final totals = <String, double>{};
+            for (var op in ops) {
+              final data = op.data() as Map<String, dynamic>;
+              final ts = data['date'] as Timestamp?;
+              if (ts == null) continue;
+              final opDate = ts.toDate();
 
-            final defaultCategories = defaultSnapshot.data!.docs;
-            final userCategories = userSnapshot.data!.docs;
+              // фильтрация по диапазону
+              if (range != null &&
+                  (opDate.isBefore(range.start) || opDate.isAfter(range.end))) {
+                continue;
+              }
+              // фильтрация по userId
+              final uid = data['userId'] as String?;
+              if (uid != user?.uid) {
+                continue;
+              }
 
-            List<Widget> allCategories = [];
+              final cid = data['categoryId'] as String?;
+              final amt = (data['amount'] as num?)?.toDouble() ?? 0;
+              if (cid != null) {
+                totals[cid] = (totals[cid] ?? 0) + amt;
+              }
+            }
 
-            // Дефолтные категории (автонажатие открывает диалог добавления операции)
-            allCategories.addAll(defaultCategories.map((doc) {
+            final widgets = categories.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               final name = selectedLanguage == 'en'
-                  ? data['name_en'] ?? ''
-                  : data['name'] ?? '';
+                  ? data['name_en'] ?? data['name'] ?? ''
+                  : data['name'] ?? data['name_en'] ?? '';
               final iconName = data['icon'] ?? 'category';
+              final total = totals[doc.id] ?? 0;
 
-              return FutureBuilder<double>(
-                future: vm.getCategorySum(
-                  categoryId: doc.id,
-                  startDate: vm.selectedDate,
-                  endDate: vm.selectedDate,
-                  userId: user.uid,
-                ),
-                builder: (context, snapshot) {
-                  String amountText = '0.00';
-
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    amountText = '...'; // или можно пустую строку ''
-                  } else if (snapshot.hasError) {
-                    amountText = 'Err';
-                  } else {
-                    final sum = snapshot.data ?? 0.0;
-                    amountText = sum.toStringAsFixed(2);
-                  }
-
-                  return CategoryButton(
-                    icon: _getIconData(iconName),
-                    label: name,
-                    backgroundColor: Colors.blue.shade100,
-                    iconColor: Colors.white,
-                    amount: amountText,
-                    onTap: () {
-                      showAddOperationDialog(context, name, doc.id);
-                    },
-                  );
-                },
-              );
-            }));
-            // Пользовательские категории
-            allCategories.addAll(userCategories.map((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              final name = data['name'] ?? '';
               return CategoryButton(
-                icon: Icons.category,
+                icon: _getIconData(iconName),
                 label: name,
                 backgroundColor: Colors.green.shade100,
                 iconColor: Colors.white,
-                amount: '0',
-                onTap: () {
-                  showAddOperationDialog(context, name, doc.id);
-                },
+                amount: total,
+                onTap: () => showAddOperationDialog(
+                  context,
+                  name,
+                  doc.id,
+                ),
               );
-            }));
+            }).toList();
 
-            // Кнопка добавления категории
-            allCategories.add(CategoryButton(
+            widgets.add(CategoryButton(
               icon: Icons.add,
               label: '',
               backgroundColor: Colors.grey.shade300,
               iconColor: Colors.black,
-              amount: '',
-              onTap: () {
-                _showAddCategoryDialog(context);
-              },
+              amount: null,
+              onTap: showAddCategoryDialog,
             ));
 
-            return Wrap(
-              spacing: 20,
-              runSpacing: 20,
-              children: allCategories,
-            );
+            return Wrap(spacing: 20, runSpacing: 20, children: widgets);
           },
         );
       },
     );
   }
 
-  void _showAddCategoryDialog(BuildContext context) {
-    final TextEditingController controller = TextEditingController();
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null || user.isAnonymous) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(S.of(context).logIn)),
-      );
-      return;
-    }
+  void showAddOperationDialog(
+    BuildContext context,
+    String categoryName,
+    String categoryId,
+  ) {
+    final amountController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
+    String paymentMethod = 'cash';
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
-          title: const Text('Добавить категорию'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Название категории',
-              hintText: 'Например, Хобби',
-            ),
+          title: Text('${S.of(context).addOperation} - $categoryName'),
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Дата
+                    Row(
+                      children: [
+                        Text('${S.of(context).date}: '),
+                        TextButton(
+                          child: Text(
+                            DateFormat('dd.MM.yyyy').format(selectedDate),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                            );
+                            if (picked != null && picked != selectedDate) {
+                              setState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // Сумма
+                    TextField(
+                      controller: amountController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: S.of(context).amount,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Способ оплаты
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(S.of(context).paymentMethod),
+                        RadioListTile<String>(
+                          title: Text(S.of(context).cash),
+                          value: 'cash',
+                          groupValue: paymentMethod,
+                          onChanged: (value) {
+                            setState(() {
+                              paymentMethod = value!;
+                            });
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: Text(S.of(context).card),
+                          value: 'card',
+                          groupValue: paymentMethod,
+                          onChanged: (value) {
+                            setState(() {
+                              paymentMethod = value!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           actions: [
             TextButton(
+              child: Text(S.of(context).cancel),
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Отмена'),
             ),
-            TextButton(
+            ElevatedButton(
+              child: Text(S.of(context).save),
               onPressed: () async {
-                final name = controller.text.trim();
-                if (name.isEmpty) {
+                final amountText = amountController.text.trim();
+                if (amountText.isEmpty || double.tryParse(amountText) == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Введите название категории')),
+                    SnackBar(content: Text(S.of(context).enterValidAmount)),
                   );
                   return;
                 }
 
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('Users')
-                      .doc(user.uid)
-                      .collection('categories')
-                      .add({
-                    'name': name,
-                    'name_en': name,
-                    'type':
-                        _selectedType, // текущий выбранный тип: income/expense
-                    'icon': 'category', // можно заменить на выбранную позже
-                    'createdAt': FieldValue.serverTimestamp(),
-                  });
+                final amount = double.parse(amountText);
+                final currentUser = FirebaseAuth.instance.currentUser;
 
-                  Navigator.of(context).pop(); // закрыть диалог
-                } catch (e) {
+                if (currentUser == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ошибка при добавлении: $e')),
+                    SnackBar(content: Text(S.of(context).logIn)),
                   );
+                  return;
                 }
+
+                final operationData = {
+                  'categoryId': categoryId,
+                  'type': _selectedType,
+                  'categoryName': categoryName,
+                  'date': Timestamp.fromDate(selectedDate),
+                  'amount': amount,
+                  'paymentMethod': paymentMethod,
+                  'userId': currentUser.uid,
+                  'createdAt': Timestamp.now(),
+                };
+
+                await FirebaseFirestore.instance
+                    .collection('Operations')
+                    .add(operationData);
+
+                Navigator.of(context).pop();
               },
-              child: const Text('Добавить'),
             ),
           ],
         );

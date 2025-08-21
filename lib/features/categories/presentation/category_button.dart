@@ -5,7 +5,7 @@ class CategoryButton extends StatelessWidget {
   final String label;
   final Color backgroundColor;
   final Color iconColor;
-  final String amount;
+  final double? amount;
   final VoidCallback? onTap; // Добавили
 
   const CategoryButton({
@@ -14,7 +14,7 @@ class CategoryButton extends StatelessWidget {
     required this.label,
     required this.backgroundColor,
     required this.iconColor,
-    required this.amount,
+    this.amount,
     this.onTap, // Добавили
   });
 
@@ -37,14 +37,16 @@ class CategoryButton extends StatelessWidget {
             child: Icon(icon, color: iconColor, size: 30),
           ),
           const SizedBox(height: 8),
-          Text(
-            amount,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+          const SizedBox(height: 8),
+          if (amount != null)
+            Text(
+              amount!.toStringAsFixed(2),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
-          ),
         ],
       ),
     );
