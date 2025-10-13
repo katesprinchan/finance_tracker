@@ -55,7 +55,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "cash": MessageLookupByLibrary.simpleMessage("Cash"),
         "categories": MessageLookupByLibrary.simpleMessage("Categories"),
         "categoryDeleted":
-            MessageLookupByLibrary.simpleMessage("Категория удалена"),
+            MessageLookupByLibrary.simpleMessage("Category deleted"),
         "categoryName": MessageLookupByLibrary.simpleMessage("Category"),
         "categoryUpdated": MessageLookupByLibrary.simpleMessage(
             "The category has been updated"),
@@ -132,6 +132,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "my": MessageLookupByLibrary.simpleMessage("My"),
         "name": MessageLookupByLibrary.simpleMessage("Name"),
         "newPassword": MessageLookupByLibrary.simpleMessage("New password"),
+        "noOperations": MessageLookupByLibrary.simpleMessage("No operations"),
         "officialCurrency": MessageLookupByLibrary.simpleMessage(
             "The official currency of the PMR is the Pridnestrovian ruble.\n You can exchange Moldovan lei, Ukrainian hryvnia, Russian rubles, dollars and euros for it at all exchange offices in the republic. Other currencies can be exchanged at the central branch of the Pridnestrovian Republican Bank. It is impossible to exchange Romanian lei in Pridnestrovie!\n Payment for services (restaurants, transport) in Transnistria is made only in PMR rubles."),
         "operations": MessageLookupByLibrary.simpleMessage("Operations"),

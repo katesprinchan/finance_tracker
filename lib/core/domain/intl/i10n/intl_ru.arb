@@ -136,5 +136,6 @@
     "deleteCategory": "Удалить категорию?",
     "sureDeleteCategory": "Вы уверены, что хотите удалить эту категорию?",
     "delete": "Удалить",
-    "categoryDeleted": "Категория удалена"
+    "categoryDeleted": "Категория удалена",
+    "noOperations": "Операций за этот период пока нет"
 }

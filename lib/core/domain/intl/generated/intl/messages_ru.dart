@@ -137,6 +137,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "my": MessageLookupByLibrary.simpleMessage("Мои"),
         "name": MessageLookupByLibrary.simpleMessage("Имя"),
         "newPassword": MessageLookupByLibrary.simpleMessage("Новый пароль"),
+        "noOperations": MessageLookupByLibrary.simpleMessage(
+            "Операций за этот период пока нет"),
         "officialCurrency": MessageLookupByLibrary.simpleMessage(
             "Официальная валюта ПМР – приднестровский рубль.\nНа него можно обменять молдавские леи, украинскую гривну, российские рубли, доллары и евро во всех обменных пунктах республики. Другие валюты можно обменять в центральном отделении Приднестровского Республиканского Банка. В Приднестровье невозможно обменять румынские леи!\nОплата за услуги (рестораны, транспорт) в Приднестровье производится только в рублях ПМР."),
         "operations": MessageLookupByLibrary.simpleMessage("Операции"),

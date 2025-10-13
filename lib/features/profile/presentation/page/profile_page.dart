@@ -9,15 +9,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-class OperationsPage extends StatefulWidget {
+class ProfilePage extends StatefulWidget {
   final CategorieViewModel vm;
-  const OperationsPage({super.key, required this.vm});
+  const ProfilePage({super.key, required this.vm});
 
   @override
-  State<OperationsPage> createState() => _OperationsPageState();
+  State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _OperationsPageState extends State<OperationsPage> {
+class _ProfilePageState extends State<ProfilePage> {
   CategorieViewModel get vm => widget.vm;
   late CategorieViewModel _profileViewModel;
 

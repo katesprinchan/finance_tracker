@@ -134,5 +134,6 @@
     "deleteCategory": "Delete a category?",
     "sureDeleteCategory": "Are you sure want to delete this category?",
     "delete": "Delete",
-    "categoryDeleted": "Категория удалена"
+    "categoryDeleted": "Category deleted",
+    "noOperations": "No operations"
 }

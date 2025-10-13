@@ -6,7 +6,7 @@ import 'package:finance_tracker/features/auth/presentation/auth_vm.dart';
 import 'package:finance_tracker/features/auth/presentation/email_address_verification.dart';
 import 'package:finance_tracker/features/categories/presentation/page/categorie_page.dart';
 import 'package:finance_tracker/features/categories/presentation/page/categorie_vm.dart';
-import 'package:finance_tracker/features/categories/presentation/page/categoriesEditPageDetail.dart';
+import 'package:finance_tracker/features/categories/presentation/page/categories_edit_page_detail.dart';
 import 'package:finance_tracker/features/categories/presentation/page/editing_categorie_page.dart';
 /*import 'package:finance_tracker/features/cities/presentation/add_comment_page.dart';
 import 'package:finance_tracker/features/cities/presentation/add_comment_vm.dart';
@@ -24,6 +24,8 @@ import 'package:finance_tracker/features/history/presentation/history_page.dart'
 import 'package:finance_tracker/features/home/presentation/home_page.dart';
 import 'package:finance_tracker/features/init/presentation/init_page.dart';
 import 'package:finance_tracker/features/init/presentation/init_vm.dart';
+import 'package:finance_tracker/features/onboarding/presentation/onboarding.dart';
+import 'package:finance_tracker/features/operations/presentation/page/operation_edit_page_detail.dart';
 import 'package:finance_tracker/features/operations/presentation/page/operations_page.dart';
 import 'package:finance_tracker/features/profile/presentation/page/editing_profile_page.dart';
 import 'package:finance_tracker/features/profile/presentation/page/profile_page.dart';
@@ -41,6 +43,8 @@ abstract class AppRouteList {
 
   static const auth = '/auth';
 
+  static const onboardingPage = '/onboardingPage';
+
   static const _emailAddressVerificationPagePath =
       'emailAddressVerificationPage';
   static const emailAddressVerificationPage =
@@ -53,13 +57,14 @@ abstract class AppRouteList {
   static const passwordResetPage = '$auth/$_passwordResetPagePath';
 
   static const operationListPage = '/operationListPage';
+  static const editingOperationPage = '/editingOperationPage';
   static const categoriePage = '/categoriePage';
-  static const _editingCategoriePagePath = '/editingCategoriePage';
-  static const editingCategoriePage = _editingCategoriePagePath;
+
+  static const editingCategoriePage = '/editingCategoriePage';
 
   static const _categoriesDetailPagePath = 'editingCategoriDetailePage';
   static const categoriesDetailPage =
-      '$_editingCategoriePagePath/$_categoriesDetailPagePath';
+      '$editingCategoriePage/$_categoriesDetailPagePath';
   static const analyticPage = '/analyticPage';
 
   static const profilePage = '/profilePage';
@@ -78,6 +83,10 @@ abstract class AppRouterConfig {
         builder: (context, state) => const InitPage(
           vm: InitViewModel(),
         ),
+      ),
+      GoRoute(
+        path: AppRouteList.onboardingPage,
+        builder: (context, state) => const OnboardingPage(), // 👈 твоя страница
       ),
       GoRoute(
         path: AppRouteList.auth,
@@ -157,15 +166,22 @@ abstract class AppRouterConfig {
             initialLocation: AppRouteList.operationListPage,
             routes: [
               GoRoute(
-                  path: AppRouteList.operationListPage,
-                  builder: (context, state) => OperationsPage(
-                        vm: CategorieViewModel(
-                          settingService:
-                              AppContainer().serviceScope.settingsService,
-                        ),
-                      ),
-                  routes: const []
-                  /*
+                path: AppRouteList.operationListPage,
+                builder: (context, state) {
+                  final vm = CategoryViewModel(
+                    settingService: AppContainer().serviceScope.settingsService,
+                  );
+
+                  return ChangeNotifierProvider<CategoryViewModel>.value(
+                    value: vm,
+                    child: OperationsPage(
+                      vm: vm,
+                      settingsService:
+                          AppContainer().serviceScope.settingsService,
+                    ),
+                  );
+                },
+                /*
                   GoRoute(
                     path: AppRouteList._aboutApplicationPath,
                     builder: (context, state) => const AboutApplicationPage(),
@@ -228,7 +244,7 @@ abstract class AppRouterConfig {
                             ]),
                       ]),
                 ],*/
-                  ),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -236,11 +252,20 @@ abstract class AppRouterConfig {
             routes: [
               GoRoute(
                 path: AppRouteList.analyticPage,
-                builder: (context, state) => AnalyticsPage(
-                  vm: CategorieViewModel(
+                builder: (context, state) {
+                  final vm = CategoryViewModel(
                     settingService: AppContainer().serviceScope.settingsService,
-                  ),
-                ),
+                  );
+
+                  return ChangeNotifierProvider<CategoryViewModel>.value(
+                    value: vm,
+                    child: AnalyticsPage(
+                      vm: vm,
+                      settingsService:
+                          AppContainer().serviceScope.settingsService,
+                    ),
+                  );
+                },
                 /* routes: [
                     GoRoute(
                         path: AppRouteList._detailPageFavoritePath,
@@ -290,7 +315,7 @@ abstract class AppRouterConfig {
         ],
       ),
       GoRoute(
-        path: AppRouteList._editingCategoriePagePath,
+        path: AppRouteList.editingCategoriePage,
         builder: (context, state) {
           final vm = CategoryViewModel(
             settingService: AppContainer().serviceScope.settingsService,
@@ -316,6 +341,17 @@ abstract class AppRouterConfig {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRouteList.editingOperationPage,
+        builder: (context, state) {
+          return OperationsEditPageDetail(
+            vm: CategoryViewModel(
+              settingService: AppContainer().serviceScope.settingsService,
+            ),
+            settingsService: AppContainer().serviceScope.settingsService,
+          );
+        },
       ),
     ],
   );

@@ -1400,11 +1400,21 @@ class S {
     );
   }
 
-  /// `Категория удалена`
+  /// `Category deleted`
   String get categoryDeleted {
     return Intl.message(
-      'Категория удалена',
+      'Category deleted',
       name: 'categoryDeleted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No operations`
+  String get noOperations {
+    return Intl.message(
+      'No operations',
+      name: 'noOperations',
       desc: '',
       args: [],
     );

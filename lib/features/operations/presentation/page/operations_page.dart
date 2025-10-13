@@ -1,209 +1,266 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finance_tracker/core/domain/intl/generated/l10n.dart';
-import 'package:finance_tracker/core/presentation/app_filled_button.dart';
-import 'package:finance_tracker/core/presentation/button/app_bar_action_button.dart';
-import 'package:finance_tracker/core/presentation/drawer.dart';
-import 'package:finance_tracker/features/profile/presentation/page/profile_vm.dart';
+import 'package:finance_tracker/core/presentation/button/custom_chip.dart';
+import 'package:finance_tracker/features/categories/presentation/page/categorie_vm.dart';
+import 'package:finance_tracker/features/settings/domain/service/settings_service.dart';
 import 'package:finance_tracker/routing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-class ProfilePage extends StatefulWidget {
-  final CategorieViewModel vm;
-  const ProfilePage({super.key, required this.vm});
-
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage>
-    with SingleTickerProviderStateMixin {
-  CategorieViewModel get vm => widget.vm;
-  late CategorieViewModel _profileViewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _profileViewModel = widget.vm;
-  }
+class OperationsPage extends StatelessWidget {
+  final SettingsService settingsService;
+  final CategoryViewModel vm;
+  const OperationsPage({
+    super.key,
+    required this.vm,
+    required this.settingsService,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
     return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            S.of(context).profile,
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (context.watch<CategoryViewModel>().periodType !=
+                  PeriodType.allTime)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    vm.previousPeriod();
+                  },
+                )
+              else
+                const SizedBox(width: 48),
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      useRootNavigator: true,
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) => _buildPeriodPicker(context),
+                    );
+                  },
+                  child: Center(
+                    child: Text(
+                      context
+                          .watch<CategoryViewModel>()
+                          .getFormattedPeriodLabel(context),
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ),
+              ),
+              if (context.watch<CategoryViewModel>().periodType !=
+                  PeriodType.allTime)
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward),
+                  onPressed: () {
+                    vm.nextPeriod();
+                  },
+                )
+              else
+                const SizedBox(width: 48),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 👇 теперь список занимает все оставшееся место
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Operations')
+                  .where('userId',
+                      isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text("Нет операций"));
+                }
+
+                final docs = snapshot.data!.docs;
+                final categoryVM = context.watch<CategoryViewModel>();
+                final range = categoryVM.getCurrentDateRange();
+
+                // Фильтрация по диапазону
+                final filteredDocs = docs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final ts = data['date'] as Timestamp?;
+                  if (ts == null) return false;
+                  final opDate = ts.toDate();
+                  if (range != null &&
+                      (opDate.isBefore(range.start) ||
+                          opDate.isAfter(range.end))) {
+                    return false;
+                  }
+                  return true;
+                }).toList();
+                if (filteredDocs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      S.of(context).noOperations,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: filteredDocs.length,
+                  itemBuilder: (context, index) {
+                    final doc = filteredDocs[index];
+                    final data = doc.data() as Map<String, dynamic>;
+
+                    final date = (data['date'] as Timestamp).toDate();
+                    final formattedDate =
+                        DateFormat('dd MMMM yyyy', 'ru').format(date);
+
+                    final category = data['categoryName'] ?? "Без категории";
+                    final account = data['paymentMethod'] ?? "Счёт";
+                    final note = data['description'] ?? "";
+                    final amount = data['amount'] ?? 0;
+
+                    return InkWell(
+                      onTap: () {
+                        // 👇 обработчик клика
+                        SelectedOperation.id = doc.id;
+                        SelectedOperation.name = note;
+                        SelectedOperation.amount = amount;
+                        context.go(AppRouteList.editingOperationPage);
+                      },
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          child: Icon(Icons.category, color: Colors.white),
+                        ),
+                        title: Text(category),
+                        subtitle: Text("$account • $note\n$formattedDate"),
+                        trailing: Text(
+                          "$amount ₽",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: amount < 0 ? Colors.red : Colors.green,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => context.go(AppRouteList.editingOperationPage),
+      //   child: const Icon(Icons.add),
+      // ),
+    );
+  }
+
+  Widget _buildPeriodPicker(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            S.of(context).period,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
                 ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
           ),
-          actions: [
-            if (currentUser != null)
-              const AppBarActionButton(
-                //onTap: () => {context.go(AppRouteList.editingProfilePage)},
-                child: Icon(Icons.edit_outlined),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 5,
+            runSpacing: 5,
+            children: [
+              CustomChip(
+                label: S.of(context).allTime,
+                icon: Icons.all_inclusive,
+                onPressed: () {
+                  vm.selectPeriod(PeriodType.allTime);
+                  Navigator.of(context).pop();
+                },
               ),
-          ],
-        ),
-        drawer: MainDrawer(onSettingsTap: () {
-          widget.vm.onSettingsTap(context);
-        }),
-        body: currentUser == null
-            ? _notAuthorized(context)
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _titleBuilder(context),
-                  const SizedBox(height: 16),
-                  _contentBuilder(context)
-                ],
-              ));
+              CustomChip(
+                label: S.of(context).chooseDay,
+                icon: Icons.calendar_today,
+                onPressed: () {
+                  _showDatePicker(context);
+                  vm.selectPeriod(PeriodType.chooseDay);
+                },
+              ),
+              CustomChip(
+                label: S.of(context).weekRange(vm.getCurrentWeekRange()),
+                icon: Icons.date_range,
+                onPressed: () {
+                  vm.selectPeriod(PeriodType.week);
+                  Navigator.of(context).pop();
+                },
+              ),
+              CustomChip(
+                label: S
+                    .of(context)
+                    .today(DateFormat('dd.MM').format(DateTime.now())),
+                icon: Icons.today,
+                onPressed: () {
+                  vm.selectPeriod(PeriodType.day);
+                  Navigator.of(context).pop();
+                },
+              ),
+              CustomChip(
+                label: S.of(context).year(DateTime.now().year),
+                icon: Icons.calendar_month,
+                onPressed: () {
+                  vm.selectPeriod(PeriodType.year);
+                  Navigator.of(context).pop();
+                },
+              ),
+              CustomChip(
+                label: S.of(context).month(
+                    DateFormat('LLLL yyyy', 'ru').format(DateTime.now())),
+                icon: Icons.calendar_view_month,
+                onPressed: () {
+                  vm.selectPeriod(PeriodType.month);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          )
+        ],
+      ),
+    );
   }
 
-  Widget _notAuthorized(BuildContext context) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.account_box_rounded,
-                color: Theme.of(context).colorScheme.outlineVariant, size: 90),
-            const SizedBox(height: 40),
-            Text(
-              S.of(context).registerAndShare,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            AppFilledButton(
-              onPressed: () {
-                context.go(AppRouteList.auth);
-              },
-              width: 230,
-              child: Text(S.of(context).signUp),
-            ),
-          ],
-        ),
-      );
+  void _showDatePicker(BuildContext context) {
+    showDatePicker(
+      context: context,
+      firstDate: DateTime(2025),
+      lastDate: DateTime(2030),
+      initialDate: DateTime.now(),
+    ).then((value) {
+      if (value != null) {
+        vm.setDate(value);
+      }
+    });
+  }
+}
 
-  Widget _imageBuilder() => StreamBuilder<String?>(
-        stream: _profileViewModel.getURL(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else {
-            final String? profileImageURL = snapshot.data;
-            if (profileImageURL != null && profileImageURL.isNotEmpty) {
-              return CircleAvatar(
-                radius: 50,
-                backgroundImage: NetworkImage(profileImageURL),
-              );
-            } else {
-              return CircleAvatar(
-                radius: 50,
-                backgroundColor: Theme.of(context).colorScheme.background,
-                child: Icon(Icons.account_box_rounded,
-                    size: 90, color: Theme.of(context).colorScheme.primary),
-              );
-            }
-          }
-        },
-      );
-
-  Widget _titleBuilder(BuildContext context) => StreamBuilder<String?>(
-        stream: _profileViewModel.getFullNameStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else {
-            final String? fullName = snapshot.data;
-
-            return Center(
-              child: Column(
-                children: [
-                  _imageBuilder(),
-                  const SizedBox(height: 12),
-                  Text(
-                    fullName ?? '',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
-      );
-
-  Widget _contentBuilder(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-        ).copyWith(top: 8, bottom: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Divider(),
-            const SizedBox(height: 16),
-            Text(
-              'E-mail',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-            FutureBuilder<String?>(
-              future: _profileViewModel.getCurrentUserEmail(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  final String? email = snapshot.data;
-
-                  return Text(
-                    email ?? '',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface),
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            Text(
-              S.of(context).registrationDate,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-            FutureBuilder<DateTime?>(
-              future: _profileViewModel.getUserRegistrationDate(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  final DateTime? registrationDate = snapshot.data;
-
-                  return Text(
-                    registrationDate != null
-                        ? DateFormat.yMMMMd().format(registrationDate)
-                        : S.of(context).registrationDateUnknown,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface),
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-      );
+class SelectedOperation {
+  static String id = '';
+  static String name = '';
+  static double amount = 0.00;
 }

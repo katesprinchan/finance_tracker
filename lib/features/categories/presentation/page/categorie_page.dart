@@ -32,7 +32,7 @@ class _CategoriePageState extends State<CategoriePage> {
     final currentUser = FirebaseAuth.instance.currentUser;
     return SingleChildScrollView(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
@@ -69,6 +69,12 @@ class _CategoriePageState extends State<CategoriePage> {
                   ),
                 ),
               ),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  context.go(AppRouteList.editingCategoriePage);
+                },
+              ),
               if (context.watch<CategoryViewModel>().periodType !=
                   PeriodType.allTime)
                 IconButton(
@@ -79,12 +85,6 @@ class _CategoriePageState extends State<CategoriePage> {
                 )
               else
                 const SizedBox(width: 48),
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  context.go(AppRouteList.editingCategoriePage);
-                },
-              )
             ],
           ),
           _incomeExpense(context),
@@ -265,6 +265,7 @@ class _CategoriePageState extends State<CategoriePage> {
     String categoryId,
   ) {
     final amountController = TextEditingController();
+    final descriptionController = TextEditingController();
     DateTime selectedDate = DateTime.now();
     String paymentMethod = 'cash';
 
@@ -314,8 +315,14 @@ class _CategoriePageState extends State<CategoriePage> {
                         labelText: S.of(context).amount,
                       ),
                     ),
-                    const SizedBox(height: 10),
-
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(
+                        labelText: S.of(context).description,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     // Способ оплаты
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,6 +364,7 @@ class _CategoriePageState extends State<CategoriePage> {
               child: Text(S.of(context).save),
               onPressed: () async {
                 final amountText = amountController.text.trim();
+                final descriptionText = descriptionController.text.trim();
                 if (amountText.isEmpty || double.tryParse(amountText) == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(S.of(context).enterValidAmount)),
@@ -380,6 +388,7 @@ class _CategoriePageState extends State<CategoriePage> {
                   'categoryName': categoryName,
                   'date': Timestamp.fromDate(selectedDate),
                   'amount': amount,
+                  'description': descriptionText,
                   'paymentMethod': paymentMethod,
                   'userId': currentUser.uid,
                   'createdAt': Timestamp.now(),
